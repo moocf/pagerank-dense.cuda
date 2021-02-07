@@ -37,6 +37,8 @@ inline void try_cuda(cudaError err, const char* exp, const char* func, int line,
 // - blockIdx.y
 // - blockDim.x
 // - blockDim.y
+// - gridDim.x
+// - gridDim.y
 #define DEFINE_CUDA(tx, ty, bx, by, BX, BY, GX, GY) \
   int tx = threadIdx.x; \
   int ty = threadIdx.y; \
@@ -56,8 +58,10 @@ inline void try_cuda(cudaError err, const char* exp, const char* func, int line,
 // - blockIdx.y
 // - blockDim.x
 // - blockDim.y
-#define DEFINE(tx, ty, bx, by, BX, BY) \
-  DEFINE_CUDA(tx, ty, bx, by, BX, BY)
+// - gridDim.x
+// - gridDim.y
+#define DEFINE(tx, ty, bx, by, BX, BY, GX, GY) \
+  DEFINE_CUDA(tx, ty, bx, by, BX, BY, GX, GY)
 #endif
 
 

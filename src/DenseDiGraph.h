@@ -4,17 +4,17 @@
 
 class DenseDiGraph {
   public:
-  int  order;
-  int* degrees;
-  int* weights;
+  int    order;
+  int*   degrees;
+  float* weights;
 
   DenseDiGraph(int n) {
     order = n;
     degrees = new int[n];
-    weights = new int[n*n];
+    weights = new float[n*n];
   }
 
-  void addLink(int i, int j, int wt=1) {
+  void addLink(int i, int j, float wt=1) {
     int n = order;
     degrees[i] += wt               != 0? 1 : 0;
     degrees[i] -= weights[j*n + i] != 0? 1 : 0;

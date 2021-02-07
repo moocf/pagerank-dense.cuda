@@ -1,10 +1,12 @@
 #pragma once
 #include <string.h>
 #include <stdlib.h>
-#include <math.h>
+#include <cmath>
 #include "arrayFill.h"
 #include "DenseDiGraph.h"
 #include "dotProduct.h"
+
+using namespace std;
 
 
 // Finds rank of nodes in graph.
@@ -16,9 +18,8 @@ void pageRank(float *a, DenseDiGraph x, float damping=0.85, float convergence=1e
     int e = 0;
     for (int j=0; j<n; j++) {
       r1[j] = damping*dotProduct(x.weights+(j*n), r0, n) + (1-damping)/n;
-      e += fabs(r0[j] - r1[j]);
+      e += abs(r0[j] - r1[j]);
     }
     memcpy(r0, r1, n);
   } while (e > convergence);
-  return r0;
 }

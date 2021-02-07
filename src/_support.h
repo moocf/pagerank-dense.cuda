@@ -80,7 +80,7 @@ void __syncthreads();
 
 
 #ifndef UNUSED
-#define UNUSED(e) do { (void)(e); } while (0)
+#define UNUSED(e) (void)(e)
 #endif
 
 

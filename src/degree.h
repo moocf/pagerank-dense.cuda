@@ -5,8 +5,8 @@
 
 // Finds out-degree of a node.
 int degree(DenseDiGraph x, int i) {
-  int a = 0;
-  for (int j=0; j<x.order; j++)
-    if (x.weights[j][i] !== 0) a++;
+  int n = x.order, a = 0;
+  for (int j=0; j<n; j++)
+    if (x.weights[j*n + i] !== 0) a++;
   return a;
 }

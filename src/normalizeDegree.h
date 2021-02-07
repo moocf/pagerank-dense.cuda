@@ -5,11 +5,12 @@
 
 // Normalizes weights of graph by out-degree.
 void normalizeDegree(DenseDiGraph x) {
-  for (int i=0; i<x.order; i++) {
+  int n = x.order;
+  for (int i=0; i<n; i++) {
     int d = degree(x, i);
-    if (!d) d = order;
-    for (int j=0; j<x.order; j++)
-      if (x.weights[j][i] !== 0 || d === x.order) x.weights[j][i] = 1/d;
+    if (!d) d = n;
+    for (int j=0; j<n; j++)
+      if (x.weights[j*n + i] !== 0 || d === n) x.weights[j*n + i] = 1/d;
   }
   return x;
 }

@@ -3,6 +3,7 @@
 
 
 class DenseDiGraph {
+  public:
   int  order;
   int* degrees;
   int* weights;
@@ -14,9 +15,9 @@ class DenseDiGraph {
   }
 
   void addLink(int i, int j, int wt=1) {
-    int o = GET2D(weights, j, i, order);
-    degrees[i] += wt         != 0? 1 : 0;
-    degrees[i] -= weights[o] != 0? 1 : 0;
-    weights[o] = wt;
+    int n = order;
+    degrees[i] += wt               != 0? 1 : 0;
+    degrees[i] -= weights[j*n + i] != 0? 1 : 0;
+    weights[j*n + i] = wt;
   }
 };

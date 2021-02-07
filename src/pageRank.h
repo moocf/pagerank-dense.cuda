@@ -1,4 +1,8 @@
 #pragma once
+#include <string.h>
+#include <stdlib.h>
+#include <math.h>
+#include "arrayFill.h"
 #include "DenseDiGraph.h"
 #include "dotProduct.h"
 
@@ -6,16 +10,15 @@
 // Finds rank of nodes in graph.
 void pageRank(float *a, DenseDiGraph x, float damping=0.85, float convergence=1e-5) {
   int n = x.order;
-  float *r = new float[n];
-  var ranks = new Array(order).fill(0).map(() => 1/order);
+  float *r0 = arrayFill(a, 1.0f/n);
+  float *r1 = arrayFill(malloc(n), 0);
   do {
-    var r = ranks.slice(), e = 0;
-    for (var j=0; j<order; j++) {
-      r[j] = damping*dotProduct(weights[j], ranks) + (1-damping)/order;
-      e += Math.abs(ranks[j] - r[j]);
+    int e = 0;
+    for (int j=0; j<n; j++) {
+      r1[j] = damping*dotProduct(x.weights+(j*n), r0, n) + (1-damping)/n;
+      e += fabs(r0[j] - r1[j]);
     }
-    ranks = r;
+    memcpy(r0, r1, n);
   } while (e > convergence);
-  return ranks;
+  return r0;
 }
-module.exports = pageRank;

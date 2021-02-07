@@ -18,11 +18,19 @@ class DenseDiGraph {
     weights = new T[n*n];
   }
 
-  void addLink(int i, int j, T w=1) {
+  inline T weight(int i, int j) {
     int N = order;
-    T* w0 = &weights[N*j + i];
-    degrees[i] += w   != 0? 1 : 0;
-    degrees[i] -= *w0 != 0? 1 : 0;
-    *w0 = w;
+    return weights[N*j + i];
+  }
+
+  inline void setWeight(int i, int j, T v) {
+    int N = order;
+    weights[N*j + i] = v;
+  }
+
+  inline void addLink(int i, int j, T w=1) {
+    degrees[i] += w            != 0? 1 : 0;
+    degrees[i] -= weight(i, j) != 0? 1 : 0;
+    setWeight(i, j, w);
   }
 };

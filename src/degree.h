@@ -7,6 +7,6 @@ template <class T>
 int degree(DenseDiGraph<T> x, int i) {
   int N = x.order, a = 0;
   for (int j=0; j<N; j++)
-    if (x.weights[N*j + i] != 0) a++;
+    if (x.weight(i, j) != 0) a++;
   return a;
 }

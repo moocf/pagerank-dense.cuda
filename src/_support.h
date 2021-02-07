@@ -86,7 +86,7 @@ __device__ void unreferencedVariableCuda(T&&) {}
 
 #ifndef GET2D
 // Gets value at given row, column of 2D array
-#define GET2D(x, r, c, C) (x)[(r)*(C) + (c)]
+#define GET2D(x, r, c, C) (x)[(C)*(r) + (c)]
 #endif
 
 

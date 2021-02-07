@@ -11,6 +11,6 @@ void normalizeDegree(DenseDiGraph<T>& x) {
     int d = degree(x, i);
     if (!d) d = N;
     for (int j=0; j<N; j++)
-      if (x.weights[N*j + i] != 0 || d == N) x.weights[N*j + i] = 1/d;
+      if (x.weight(i, j) != 0 || d == N) x.setWeight(i, j, 1.0f/d);
   }
 }

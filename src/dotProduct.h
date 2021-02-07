@@ -10,10 +10,9 @@
 using namespace std;
 
 // Constants
-#ifdef _THREADS
-#undef _THREADS
+#ifndef _THREADS
+#define _THREADS 64
 #endif
-#define _THREADS 4
 
 
 // Finds sum of element-by-element product of 2 vectors (arrays).
@@ -51,19 +50,48 @@ __global__ void dotProductKernel(T *a, T *x, T *y, int N) {
   UNUSED(ty); UNUSED(by); UNUSED(BY); UNUSED(GY);
   __shared__ T cache[_THREADS];
   int i = bx*BX + tx;
-  int s = 0;
+  T s = T();
 
   for (; i<N; i+=BX*GX)
     s += x[i] * y[i];
   cache[tx] = s;
 
   __syncthreads();
-  for (int TX=BX/2; TX!=0; TX/=2) {
-    if (tx < TX) cache[tx] += cache[tx + TX];
+  sumReduce(cache, _THREADS, tx);
+  if (tx == 0) a[bx] = cache[0];
+}
+
+
+template <class T>
+__device__ void sumBlock(T *a, T *x, int N, int i, int DI) {
+
+  for (; i<N; i+=DI)
+
+}
+
+template <class T>
+__device__ void sumReduce(T* a, int N, int i) {
+  for (N=N/2; N>0; N/=2) {
+    if (i < N) a[i] += a[N+i];
     __syncthreads();
   }
+}
 
-  if (tx == 0) a[bx] = cache[0];
+
+
+template <class T>
+__device__ T dotProductKernel(T *x, T *y, int N) {
+  DEFINE(tx, ty, bx, by, BX, BY, GX, GY);
+  __shared__ T cache[_THREADS];
+  __shared__ T total;
+
+  T s = T();
+  for (int i=tx; i<N; i+=BX)
+    s += x[i] * y[i];
+  cache[tx] = s;
+
+  __syncthreads();
+
 }
 
 

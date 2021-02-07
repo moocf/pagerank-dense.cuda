@@ -20,9 +20,9 @@ class DenseDiGraph {
 
   void addLink(int i, int j, T w=1) {
     int N = order;
-    T& w0 = &weights[N*j + i];
-    degrees[i] += w  != 0? 1 : 0;
-    degrees[i] -= w0 != 0? 1 : 0;
-    w0 = w;
+    T* w0 = &weights[N*j + i];
+    degrees[i] += w   != 0? 1 : 0;
+    degrees[i] -= *w0 != 0? 1 : 0;
+    *w0 = w;
   }
 };

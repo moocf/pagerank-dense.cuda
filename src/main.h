@@ -8,4 +8,5 @@
 #include "normalizeDegree.h"
 #include "pageRank.h"
 #include "print.h"
+#include "readMtx.h"
 #include "sum.h"

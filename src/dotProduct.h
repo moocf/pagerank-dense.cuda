@@ -1,5 +1,12 @@
 #pragma once
+#include <array>
+#include <vector>
+#include <algorithm>
+#include "ceilDiv.h"
+#include "sum.h"
 #include "_support.h"
+
+using namespace std;
 
 // Constants
 #ifdef _THREADS
@@ -9,12 +16,32 @@
 
 
 // Finds sum of element-by-element product of 2 vectors (arrays).
-float dotProduct(float *x, float *y, int N) {
-  float a = 0;
+template <class T>
+T dotProduct(T *x, T *y, int N) {
+  T a = T();
   for (int i=0; i<N; i++)
     a += x[i] * y[i];
   return a;
 }
+
+
+template <class T, size_t N>
+T dotProduct(array<T, N>& x, array<T, N>& y) {
+  T a = T();
+  for (size_t i=0; i<N; i++)
+    a += x[i] * y[i];
+  return a;
+}
+
+
+template <class T>
+T dotProduct(vector<T>& x, vector<T>& y) {
+  T a = T();
+  for (size_t i=0, I=x.size(); i<I; i++)
+    a += x[i] * y[i];
+  return a;
+}
+
 
 
 __global__ void dotProductKernel(float *a, float *x, float *y, int N) {
@@ -40,7 +67,7 @@ __global__ void dotProductKernel(float *a, float *x, float *y, int N) {
 
 float dotProductCuda(float *x, float *y, int N) {
   int threads = _THREADS;
-  int blocks = MAX(CEILDIV(N, threads), 2);
+  int blocks = max(ceilDiv(N, threads), 2);
   size_t X1 = N * sizeof(float);
   size_t A1 = blocks * sizeof(float);
   float *aPartial = (float*) malloc(A1);
@@ -60,5 +87,5 @@ float dotProductCuda(float *x, float *y, int N) {
   TRY( cudaFree(xD) );
   TRY( cudaFree(aPartialD) );
 
-  return arraySum(aPartial, blocks);
+  return sum(aPartial, blocks);
 }

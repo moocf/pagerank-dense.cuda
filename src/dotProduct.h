@@ -20,6 +20,7 @@ float dotProduct(float *x, float *y, int N) {
 
 __global__ void dotProductKernel(float *a, float *x, float *y, int N) {
   DEFINE(tx, ty, bx, by, BX, BY, GX, GY);
+  UNUSED(ty); UNUSED(by); UNUSED(BY); UNUSED(GY);
   __shared__ float cache[_THREADS];
   int i = bx*BX + tx, t = tx;
   int s = 0;

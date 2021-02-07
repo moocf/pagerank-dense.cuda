@@ -79,6 +79,11 @@ void __syncthreads();
 #endif
 
 
+#ifndef UNUSED
+#define UNUSED(e) do { (void)(e); } while (0)
+#endif
+
+
 #ifndef SUM_ARRAY
 float sum_array(float* x, int N) {
     float a = 0;

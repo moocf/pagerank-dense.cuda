@@ -17,6 +17,7 @@ void matixMultiply(float *a, float *x, float *y, int XR, int XC, int YC) {
 
 __global__ void matrixMultiplyKernel(float *a, float *x, float *y, int XR, int XC, int YC) {
   DEFINE(tx, ty, bx, by, BX, BY, GX, GY);
+  UNUSED(GX); UNUSED(GY);
   int r = by*BY + ty;
   int c = bx*BX + tx;
 

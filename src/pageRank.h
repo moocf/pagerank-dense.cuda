@@ -11,11 +11,11 @@ using namespace std;
 
 // Finds rank of nodes in graph.
 void pageRank(float *a, DenseDiGraph x, float damping=0.85, float convergence=1e-5) {
-  int n = x.order;
+  int n = x.order, e;
   float *r0 = arrayFill(a, n, 1.0f/n);
   float *r1 = new float[n];
   do {
-    int e = 0;
+    e = 0;
     for (int j=0; j<n; j++) {
       r1[j] = damping*dotProduct(x.weights+(j*n), r0, n) + (1-damping)/n;
       e += abs(r0[j] - r1[j]);

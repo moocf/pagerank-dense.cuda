@@ -6,5 +6,6 @@
 #include "fill.h"
 #include "matrixMultiply.h"
 #include "normalizeDegree.h"
+#include "pageRank.h"
 #include "print.h"
 #include "sum.h"

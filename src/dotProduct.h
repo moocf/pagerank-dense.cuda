@@ -1,5 +1,6 @@
 #pragma once
 #include "_support.h"
+#include "arraySum.h"
 
 // Constants
 #ifdef _THREADS
@@ -38,7 +39,26 @@ __global__ void dotProductKernel(float *a, float *x, float *y, int N) {
 
 
 float dotProductCuda(float *x, float *y, int N) {
-  float a;
-  dotProductKernel(&a, x, y, N);
-  return a;
+  int threads = _THREADS;
+  int blocks = MAX(CEILDIV(N, threads), 2);
+  size_t X1 = N * sizeof(float);
+  size_t A1 = blocks * sizeof(float);
+  float *aPartial = (float*) malloc(A1);
+
+  float *xD, *yD, *aPartialD;
+  TRY( cudaMalloc(&xD, X1) );
+  TRY( cudaMalloc(&yD, X1) );
+  TRY( cudaMalloc(&aPartialD, A1) );
+  TRY( cudaMemcpy(xD, x, X1, cudaMemcpyHostToDevice) );
+  TRY( cudaMemcpy(bD, b, NB, cudaMemcpyHostToDevice) );
+
+  dotProductKernel<<<blocks, threads>>>(aPartialD, xD, yD, N);
+
+  TRY( cudaMemcpy(aPartial, aPartialD, A1, cudaMemcpyDeviceToHost) );
+
+  TRY( cudaFree(yD) );
+  TRY( cudaFree(xD) );
+  TRY( cudaFree(aD) );
+
+  return arraySum(aPartial, blocks);
 }

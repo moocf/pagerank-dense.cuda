@@ -10,7 +10,6 @@ void normalizeDegree(DenseDiGraph x) {
     int d = degree(x, i);
     if (!d) d = n;
     for (int j=0; j<n; j++)
-      if (x.weights[j*n + i] !== 0 || d === n) x.weights[j*n + i] = 1/d;
+      if (x.weights[j*n + i] != 0 || d == n) x.weights[j*n + i] = 1/d;
   }
-  return x;
 }

@@ -1,6 +1,5 @@
 #pragma once
 #include "_support.h"
-#include "arraySum.h"
 
 // Constants
 #ifdef _THREADS

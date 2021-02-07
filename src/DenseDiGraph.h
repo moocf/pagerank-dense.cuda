@@ -1,10 +1,10 @@
 #pragma once
-#include "_support.h"
 #include <array>
 
 using namespace std;
 
 
+// Defines an adjacency matrix (R:dst, C:src) based graph.
 template <class T>
 class DenseDiGraph {
   public:
@@ -18,7 +18,7 @@ class DenseDiGraph {
     weights = new T[n*n];
   }
 
-  void addLink(int i, int j, float w=1) {
+  void addLink(int i, int j, T w=1) {
     int n = order;
     T& w0 = &weights[j*n + i];
     degrees[i] += w  != 0? 1 : 0;

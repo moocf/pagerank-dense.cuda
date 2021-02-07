@@ -2,9 +2,10 @@
 #include <array>
 #include <vector>
 #include <algorithm>
+#include <stdlib.h>
+#include "_support.h"
 #include "ceilDiv.h"
 #include "sum.h"
-#include "_support.h"
 
 using namespace std;
 
@@ -44,35 +45,37 @@ T dotProduct(vector<T>& x, vector<T>& y) {
 
 
 
-__global__ void dotProductKernel(float *a, float *x, float *y, int N) {
+template <class T>
+__global__ void dotProductKernel(T *a, T *x, T *y, int N) {
   DEFINE(tx, ty, bx, by, BX, BY, GX, GY);
   UNUSED(ty); UNUSED(by); UNUSED(BY); UNUSED(GY);
-  __shared__ float cache[_THREADS];
-  int i = bx*BX + tx, t = tx;
+  __shared__ T cache[_THREADS];
+  int i = bx*BX + tx;
   int s = 0;
 
   for (; i<N; i+=BX*GX)
     s += x[i] * y[i];
-  cache[t] = s;
+  cache[tx] = s;
 
   __syncthreads();
-  for (int T=BX/2; T!=0; T/=2) {
-    if (t < T) cache[t] += cache[t + T];
+  for (int TX=BX/2; TX!=0; TX/=2) {
+    if (tx < TX) cache[tx] += cache[tx + TX];
     __syncthreads();
   }
 
-  if (t == 0) a[bx] = cache[0];
+  if (tx == 0) a[bx] = cache[0];
 }
 
 
-float dotProductCuda(float *x, float *y, int N) {
+template <class T>
+T dotProductCuda(T *x, T *y, int N) {
   int threads = _THREADS;
   int blocks = max(ceilDiv(N, threads), 2);
-  size_t X1 = N * sizeof(float);
-  size_t A1 = blocks * sizeof(float);
-  float *aPartial = (float*) malloc(A1);
+  size_t X1 = N * sizeof(T);
+  size_t A1 = blocks * sizeof(T);
+  T *aPartial = (T*) malloc(A1);
 
-  float *xD, *yD, *aPartialD;
+  T *xD, *yD, *aPartialD;
   TRY( cudaMalloc(&xD, X1) );
   TRY( cudaMalloc(&yD, X1) );
   TRY( cudaMalloc(&aPartialD, A1) );
@@ -88,4 +91,16 @@ float dotProductCuda(float *x, float *y, int N) {
   TRY( cudaFree(aPartialD) );
 
   return sum(aPartial, blocks);
+}
+
+
+template <class T, size_t N>
+T dotProductCuda(array<T, N>& x, array<T, N>& y) {
+  return dotProductCuda(x.data(), y.data(), N);
+}
+
+
+template <class T>
+T dotProductCuda(vector<T>& x, vector<T>& y) {
+  return dotProductCuda(x.data(), y.data(), x.size());
 }

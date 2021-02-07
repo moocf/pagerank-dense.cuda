@@ -4,12 +4,13 @@
 
 
 // Normalizes weights of graph by out-degree.
-void normalizeDegree(DenseDiGraph x) {
-  int n = x.order;
-  for (int i=0; i<n; i++) {
+template <class T>
+void normalizeDegree(DenseDiGraph<T>& x) {
+  int N = x.order;
+  for (int i=0; i<N; i++) {
     int d = degree(x, i);
-    if (!d) d = n;
-    for (int j=0; j<n; j++)
-      if (x.weights[j*n + i] != 0 || d == n) x.weights[j*n + i] = 1/d;
+    if (!d) d = N;
+    for (int j=0; j<N; j++)
+      if (x.weights[N*j + i] != 0 || d == N) x.weights[N*j + i] = 1/d;
   }
 }

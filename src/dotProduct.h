@@ -34,7 +34,7 @@ __global__ void dotProductKernel(float *a, float *x, float *y, int N) {
     __syncthreads();
   }
 
-  if (t == 0) c[bx] = cache[0];
+  if (t == 0) a[bx] = cache[0];
 }
 
 
@@ -50,7 +50,7 @@ float dotProductCuda(float *x, float *y, int N) {
   TRY( cudaMalloc(&yD, X1) );
   TRY( cudaMalloc(&aPartialD, A1) );
   TRY( cudaMemcpy(xD, x, X1, cudaMemcpyHostToDevice) );
-  TRY( cudaMemcpy(bD, b, NB, cudaMemcpyHostToDevice) );
+  TRY( cudaMemcpy(yD, y, X1, cudaMemcpyHostToDevice) );
 
   dotProductKernel<<<blocks, threads>>>(aPartialD, xD, yD, N);
 
@@ -58,7 +58,7 @@ float dotProductCuda(float *x, float *y, int N) {
 
   TRY( cudaFree(yD) );
   TRY( cudaFree(xD) );
-  TRY( cudaFree(aD) );
+  TRY( cudaFree(aPartialD) );
 
   return arraySum(aPartial, blocks);
 }

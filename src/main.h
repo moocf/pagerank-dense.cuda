@@ -3,6 +3,7 @@
 #include "degree.h"
 #include "DenseDiGraph.h"
 #include "dotProduct.h"
+#include "fill.h"
 #include "matrixMultiply.h"
 #include "normalizeDegree.h"
 #include "print.h"

@@ -12,13 +12,13 @@ T sum(T *x, int N) {
 }
 
 
-template <class T, size_t N>
-T sum(array<T, N>& x) {
-  T a = T();
-  for (auto& v : x)
-    a += v;
-  return a;
-}
+// template <class T, size_t N>
+// T sum(array<T, N>& x) {
+//   T a = T();
+//   for (auto& v : x)
+//     a += v;
+//   return a;
+// }
 
 
 template <class T>

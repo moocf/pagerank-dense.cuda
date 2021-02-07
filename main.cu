@@ -1,4 +1,3 @@
-#include <array>
 #include <stdio.h>
 #include "src/main.h"
 

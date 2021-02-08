@@ -2,6 +2,7 @@
 #include <array>
 #include <vector>
 #include <algorithm>
+#include <omp.h>
 #include "_cuda.h"
 #include "ceilDiv.h"
 #include "sum.h"
@@ -30,6 +31,30 @@ T dotProduct(array<T, N>& x, array<T, N>& y) {
 template <class T>
 T dotProduct(vector<T>& x, vector<T>& y) {
   return dotProduct(x.data(), y.data(), x.size());
+}
+
+
+
+
+template <class T>
+T dotProductOmp(T *x, T *y, int N) {
+  T a = T();
+  #pragma omp parallel for reduction (+:a)
+  for (int i=0; i<N; i++)
+    a += x[i] * y[i];
+  return a;
+}
+
+
+template <class T, size_t N>
+T dotProductOmp(array<T, N>& x, array<T, N>& y) {
+  return dotProductOmp(x.data(), y.data(), x.size());
+}
+
+
+template <class T>
+T dotProductOmp(vector<T>& x, vector<T>& y) {
+  return dotProductOmp(x.data(), y.data(), x.size());
 }
 
 

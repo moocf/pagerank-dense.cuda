@@ -1,6 +1,7 @@
 #pragma once
 #include <array>
 #include <vector>
+#include <omp.h>
 #include "_cuda.h"
 
 using namespace std;
@@ -26,6 +27,30 @@ T sum(array<T, N>& x) {
 template <class T>
 T sum(vector<T>& x) {
   return sum(x.data(), x.size());
+}
+
+
+
+
+template <class T>
+T sumOmp(T *x, int N) {
+  T a = T();
+  #pragma omp parallel for reduction (+:a)
+  for (int i=0; i<N; i++)
+    a += x[i];
+  return a;
+}
+
+
+template <class T, size_t N>
+T sumOmp(array<T, N>& x) {
+  return sumOmp(x.data(), x.size());
+}
+
+
+template <class T>
+T sumOmp(vector<T>& x) {
+  return sumOmp(x.data(), x.size());
 }
 
 

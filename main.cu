@@ -8,12 +8,20 @@ using namespace std;
 
 
 const char* testFill() {
-  array<int, 4> a = {1, 2, 3, 4};
+  array<int, 4> x = {1, 2, 3, 4};
+  array<int, 4> a;
 
+  a = x;
   fill(a, 4);
   for (auto& v : a)
     if (v != 4) return "fill";
 
+  a = x;
+  fillOmp(a, 4);
+  for (auto& v : a)
+    if (v != 4) return "fillOmp";
+
+  a = x;
   fillCuda(a, 4);
   for (auto& v : a)
     if (v != 4) return "fillCuda";
@@ -27,6 +35,9 @@ const char* testSum() {
 
   a = sum(x);
   if (a != 10) return "sum";
+
+  a = sumOmp(x);
+  if (a != 10) return "sumOmp";
 
   a = sumCuda(x);
   if (a != 10) return "sumCuda";
@@ -63,7 +74,7 @@ const char* testErrorAbs() {
 
 
 const char* testAll() {
-  array<const char*, 4> ts = {
+  vector<const char*> ts = {
     testFill(),
     testSum(),
     testDotProduct(),
@@ -88,6 +99,8 @@ int main(int argc, char **argv) {
   normalizeDegree(g);
   pageRank(ranks, g);
   printf("pageRank     = "); print(ranks, N);
+  pageRankOmp(ranks, g);
+  printf("pageRankOmp  = "); print(ranks, N);
   pageRankCuda(ranks, g);
   printf("pageRankCuda = "); print(ranks, N);
   return 0;

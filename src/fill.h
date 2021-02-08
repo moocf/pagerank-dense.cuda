@@ -1,6 +1,7 @@
 #pragma once
 #include <array>
 #include <vector>
+#include <omp.h>
 #include "_cuda.h"
 
 using namespace std;
@@ -24,6 +25,28 @@ void fill(array<T, N>& x, T v) {
 template <class T>
 void fill(vector<T>& x, T v) {
   fill(x.data(), x.size(), v);
+}
+
+
+
+
+template <class T>
+void fillOmp(T *x, int N, T v) {
+  #pragma omp parallel for
+  for (int i=0; i<N; i++)
+    x[i] = v;
+}
+
+
+template <class T, size_t N>
+void fillOmp(array<T, N>& x, T v) {
+  fillOmp(x.data(), x.size(), v);
+}
+
+
+template <class T>
+void fillOmp(vector<T>& x, T v) {
+  fillOmp(x.data(), x.size(), v);
 }
 
 

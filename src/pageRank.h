@@ -2,6 +2,7 @@
 #include <utility>
 #include <cmath>
 #include <string.h>
+#include <omp.h>
 #include "_cuda.h"
 #include "fill.h"
 #include "DenseDiGraph.h"
@@ -55,6 +56,44 @@ void pageRank(T *a, T *w, int N, pageRankOptions<T> o=pageRankOptions<T>()) {
 template <class T>
 void pageRank(T *a, DenseDiGraph<T>& x, pageRankOptions<T> o=pageRankOptions<T>()) {
   pageRank(a, x.weights, x.order, o);
+}
+
+
+
+
+// Finds rank of nodes in graph.
+template <class T>
+void pageRankOmp(T *a, T *w, int N, T p, T E) {
+  T *r = new T[N], *a0 = a;
+  fill(r, N, T(1.0/N));
+  while (1) {
+    int e = 0;
+    #pragma omp parallel for
+    for (int j=0; j<N; j++) {
+      T wjr = dotProduct(&w[N*j], r, N);
+      a[j] = p*wjr + (1-p)/N;
+      T ej = abs(r[j] - a[j]);
+      if (ej >= E) {
+        #pragma omp atomic
+        e++;
+      }
+    }
+    swap(a, r);
+    if (!e) break;
+  }
+  if (r != a0) memcpy(a0, r, N*sizeof(T));
+}
+
+
+template <class T>
+void pageRankOmp(T *a, T *w, int N, pageRankOptions<T> o=pageRankOptions<T>()) {
+  pageRankOmp(a, w, N, o.damping, o.convergence);
+}
+
+
+template <class T>
+void pageRankOmp(T *a, DenseDiGraph<T>& x, pageRankOptions<T> o=pageRankOptions<T>()) {
+  pageRankOmp(a, x.weights, x.order, o);
 }
 
 

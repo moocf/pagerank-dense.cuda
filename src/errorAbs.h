@@ -37,6 +37,30 @@ T errorAbs(vector<T>& x, vector<T>& y) {
 
 
 template <class T>
+T errorAbsOmp(T *x, T *y, int N) {
+  T a = T();
+  #pragma omp parallel for reduction (+:a)
+  for (int i=0; i<N; i++)
+    a += abs(x[i] - y[i]);
+  return a;
+}
+
+
+template <class T, size_t N>
+T errorAbsOmp(array<T, N>& x, array<T, N>& y) {
+  return errorAbsOmp(x.data(), y.data(), x.size());
+}
+
+
+template <class T>
+T errorAbsOmp(vector<T>& x, vector<T>& y) {
+  return errorAbsOmp(x.data(), y.data(), x.size());
+}
+
+
+
+
+template <class T>
 __device__ T errorAbsKernelLoop(T *x, T *y, int N, int i, int DI) {
   T a = T();
   for (; i<N; i+=DI)

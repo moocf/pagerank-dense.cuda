@@ -2,6 +2,8 @@
 #include "DenseDiGraph.h"
 
 
+
+
 // Finds out-degree of a node.
 template <class T>
 int degree(DenseDiGraph<T> x, int i) {

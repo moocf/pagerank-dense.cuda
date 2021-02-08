@@ -4,6 +4,8 @@
 using namespace std;
 
 
+
+
 // Defines an adjacency matrix (R:dst, C:src) based graph.
 template <class T>
 class DenseDiGraph {

@@ -2,7 +2,7 @@
 #include <utility>
 #include <cmath>
 #include <string.h>
-#include "_support.h"
+#include "_cuda.h"
 #include "fill.h"
 #include "DenseDiGraph.h"
 #include "dotProduct.h"

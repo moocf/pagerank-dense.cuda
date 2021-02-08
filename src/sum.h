@@ -1,7 +1,7 @@
 #pragma once
 #include <array>
 #include <vector>
-#include "_support.h"
+#include "_cuda.h"
 
 using namespace std;
 

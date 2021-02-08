@@ -3,6 +3,8 @@
 #include "degree.h"
 
 
+
+
 // Normalizes weights of graph by out-degree.
 template <class T>
 void normalizeDegree(DenseDiGraph<T>& x) {

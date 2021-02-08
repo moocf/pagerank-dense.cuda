@@ -3,7 +3,7 @@
 #include <array>
 #include <vector>
 #include <algorithm>
-#include "_support.h"
+#include "_cuda.h"
 #include "ceilDiv.h"
 #include "sum.h"
 

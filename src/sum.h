@@ -1,8 +1,13 @@
 #pragma once
 #include <array>
 #include <vector>
+#include "_support.h"
 
 using namespace std;
+
+#ifndef _THREADS
+#define _THREADS 64
+#endif
 
 
 
@@ -18,50 +23,44 @@ T sum(T *x, int N) {
 
 template <class T, size_t N>
 T sum(array<T, N>& x) {
-  T a = T();
-  for (auto& v : x)
-    a += v;
-  return a;
+  return sum(x.data(), x.size());
 }
 
 
 template <class T>
 T sum(vector<T>& x) {
+  return sum(x.data(), x.size());
+}
+
+
+
+
+template <class T>
+__device__ void sumKernelReduce(T* a, int N, int i) {
+  __syncthreads();
+  for (N=N/2; N>0; N/=2) {
+    if (i < N) a[i] += a[N+i];
+    __syncthreads();
+  }
+}
+
+
+template <class T>
+__device__ T sumKernelLoop(T *x, int N, int i, int DI) {
   T a = T();
-  for (auto& v : x)
-    a += v;
+  for (; i<N; i+=DI)
+    a += x[i];
   return a;
 }
 
 
 template <class T>
-__device__ T sumBlock(T *a, int N) {
-  int t = threadIdx.x;
-  int B = blockDim.x;
-  for (int T=B/2; T>0; T/=2) {
-    if (t < T) a[t] += a[T+t];
-    __syncthreads();
-  }
-  return a[0];
-}
-
-template <class T>
-__device__ T sumBlocks(T *a, T *x, int N) {
-  T s = T();
-  for (int i=t; i<N; i+=B)
-    s += x[i];
-
-  __syncthreads();
-
-}
-
-
-template <class T>
-__global__ void sumGrid(T *a, T *x, int N) {
-  DEFINE(t, ty, b, by, B, BY, G, GY);
+__global__ void sumKernel(T *a, T *x, int N) {
+  DEFINE(t, b, B, G);
   __shared__ T cache[_THREADS];
-  for (int i=B*b+t; i<N; i+=BX*GX)
 
+  cache[t] = sumKernelLoop(x, N, B*b+t, G*B);
+  sumKernelReduce(cache, B, t);
   if (t == 0) a[b] = cache[0];
 }
 
@@ -74,20 +73,15 @@ T sumCuda(T *x, int N) {
   size_t A1 = blocks * sizeof(T);
   T *aPartial = (T*) malloc(A1);
 
-  T *xD, *yD, *aPartialD;
+  T *xD, *aPartialD;
   TRY( cudaMalloc(&xD, X1) );
-  TRY( cudaMalloc(&yD, X1) );
   TRY( cudaMalloc(&aPartialD, A1) );
   TRY( cudaMemcpy(xD, x, X1, cudaMemcpyHostToDevice) );
-  TRY( cudaMemcpy(yD, y, X1, cudaMemcpyHostToDevice) );
 
-  dotProductKernel<<<blocks, threads>>>(aPartialD, xD, yD, N);
-
+  sumKernel<<<blocks, threads>>>(aPartialD, xD, N);
   TRY( cudaMemcpy(aPartial, aPartialD, A1, cudaMemcpyDeviceToHost) );
 
-  TRY( cudaFree(yD) );
   TRY( cudaFree(xD) );
   TRY( cudaFree(aPartialD) );
-
   return sum(aPartial, blocks);
 }

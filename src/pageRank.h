@@ -27,7 +27,7 @@ struct pageRankOptions {
 // Finds rank of nodes in graph.
 template <class T>
 void pageRank(T *a, T *w, int N, T p=0.85, T E=1e-6) {
-  fill(a, N, 1.0/N);
+  fill(a, N, T(1.0/N));
   T *r0 = a;
   T *r1 = new T[N];
   while (1) {
@@ -45,13 +45,13 @@ void pageRank(T *a, T *w, int N, T p=0.85, T E=1e-6) {
 
 
 template <class T>
-void pageRank(T *a, T *w, int N, pageRankOptions<T> o) {
+void pageRank(T *a, T *w, int N, pageRankOptions<T> o=pageRankOptions<T>()) {
   pageRank(a, w, N, o.damping, o.convergence);
 }
 
 
 template <class T>
-void pageRank(T *a, DenseDiGraph<T>& x, pageRankOptions<T> o) {
+void pageRank(T *a, DenseDiGraph<T>& x, pageRankOptions<T> o=pageRankOptions<T>()) {
   pageRank(a, x.weights, x.order, o);
 }
 
@@ -59,13 +59,13 @@ void pageRank(T *a, DenseDiGraph<T>& x, pageRankOptions<T> o) {
 
 
 template <class T>
-__global__ void pageRankKernel(int *es, T *r0, T *r1, T *w, int N, T p) {
-  DEFINE(tx, ty, bx, by, BX, BY, GX, GY);
+__global__ void pageRankKernel(int *es, T *r0, T *r1, T *w, int N, T p, T E) {
+  DEFINE(t, b, B, G);
 
-  for (int i=bx; i<N; i+=GX) {
+  for (int i=b; i<N; i+=G) {
     T wir = dotProductKernel(&w[N*i], r0, N);
     r1[i] = p*wir + (1-p)/N;
     T e = abs(r1[i] - r0[i]);
-    if (e >= E) atomicAdd(&es, 1);
+    if (e >= E) atomicAdd(es, 1);
   }
 }

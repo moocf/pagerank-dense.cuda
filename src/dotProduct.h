@@ -15,6 +15,8 @@ using namespace std;
 #endif
 
 
+
+
 // Finds sum of element-by-element product of 2 vectors (arrays).
 template <class T>
 T dotProduct(T *x, T *y, int N) {
@@ -27,71 +29,35 @@ T dotProduct(T *x, T *y, int N) {
 
 template <class T, size_t N>
 T dotProduct(array<T, N>& x, array<T, N>& y) {
-  T a = T();
-  for (size_t i=0; i<N; i++)
-    a += x[i] * y[i];
-  return a;
+  return dotProduct(x.data(), y.data(), x.size());
 }
 
 
 template <class T>
 T dotProduct(vector<T>& x, vector<T>& y) {
+  return dotProduct(x.data(), y.data(), x.size());
+}
+
+
+
+
+template <class T>
+__device__ T dotProductKernelLoop(T *x, T *y, int N, int i, int DI) {
   T a = T();
-  for (size_t i=0, I=x.size(); i<I; i++)
+  for (; i<N; i+=DI)
     a += x[i] * y[i];
   return a;
 }
 
 
-
 template <class T>
 __global__ void dotProductKernel(T *a, T *x, T *y, int N) {
-  DEFINE(tx, ty, bx, by, BX, BY, GX, GY);
-  UNUSED(ty); UNUSED(by); UNUSED(BY); UNUSED(GY);
+  DEFINE(t, b, B, G);
   __shared__ T cache[_THREADS];
-  int i = bx*BX + tx;
-  T s = T();
 
-  for (; i<N; i+=BX*GX)
-    s += x[i] * y[i];
-  cache[tx] = s;
-
-  __syncthreads();
-  sumReduce(cache, _THREADS, tx);
-  if (tx == 0) a[bx] = cache[0];
-}
-
-
-template <class T>
-__device__ void sumBlock(T *a, T *x, int N, int i, int DI) {
-
-  for (; i<N; i+=DI)
-
-}
-
-template <class T>
-__device__ void sumReduce(T* a, int N, int i) {
-  for (N=N/2; N>0; N/=2) {
-    if (i < N) a[i] += a[N+i];
-    __syncthreads();
-  }
-}
-
-
-
-template <class T>
-__device__ T dotProductKernel(T *x, T *y, int N) {
-  DEFINE(tx, ty, bx, by, BX, BY, GX, GY);
-  __shared__ T cache[_THREADS];
-  __shared__ T total;
-
-  T s = T();
-  for (int i=tx; i<N; i+=BX)
-    s += x[i] * y[i];
-  cache[tx] = s;
-
-  __syncthreads();
-
+  cache[t] = dotProductKernelLoop(x, y, N, B*b+t, G*B);
+  sumKernelReduce(cache, B, t);
+  if (t == 0) a[b] = cache[0];
 }
 
 
@@ -111,13 +77,11 @@ T dotProductCuda(T *x, T *y, int N) {
   TRY( cudaMemcpy(yD, y, X1, cudaMemcpyHostToDevice) );
 
   dotProductKernel<<<blocks, threads>>>(aPartialD, xD, yD, N);
-
   TRY( cudaMemcpy(aPartial, aPartialD, A1, cudaMemcpyDeviceToHost) );
 
   TRY( cudaFree(yD) );
   TRY( cudaFree(xD) );
   TRY( cudaFree(aPartialD) );
-
   return sum(aPartial, blocks);
 }
 

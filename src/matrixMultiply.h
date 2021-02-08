@@ -20,8 +20,8 @@ void matixMultiply(T *a, T *x, T *y, int XR, int XC, int YC) {
 
 template <class T>
 __global__ void matrixMultiplyKernel(T *a, T *x, T *y, int XR, int XC, int YC) {
-  DEFINE(tx, ty, bx, by, BX, BY, GX, GY);
-  UNUSED(GX); UNUSED(GY);
+  DEFINE2D(tx, ty, bx, by, BX, BY, GX, GY);
+  UNUSED(GX, GY);
   int r = by*BY + ty;
   int c = bx*BX + tx;
 

@@ -48,11 +48,26 @@ const char* testDotProduct() {
 }
 
 
+const char* testErrorAbs() {
+  array<int, 4> x = {1, 2, 3, 4};
+  array<int, 4> y = {1, 1, 3, 5};
+  int a;
+
+  a = errorAbs(x, y);
+  if (a != 2) return "errorAbs";
+
+  a = errorAbsCuda(x, y);
+  if (a != 2) return "errorAbsCuda";
+  return NULL;
+}
+
+
 const char* testAll() {
-  array<const char*, 3> ts = {
+  array<const char*, 4> ts = {
     testFill(),
     testSum(),
-    testDotProduct()
+    testDotProduct(),
+    testErrorAbs()
   };
   for (auto& t : ts) {
     if (!t) continue;

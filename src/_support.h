@@ -1,9 +1,14 @@
 #pragma once
 #include <stdio.h>
-#include <stdlib.h>
 #include <cuda_runtime.h>
 
 
+
+
+// Constants
+#ifndef _THREADS
+#define _THREADS 64
+#endif
 
 #ifndef TRY_CUDA
 inline void try_cuda(cudaError err, const char* exp, const char* func, int line, const char* file) {

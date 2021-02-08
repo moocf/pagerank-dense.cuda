@@ -12,10 +12,10 @@ class DenseDiGraph {
   int* degrees;
   T*   weights;
 
-  DenseDiGraph(int n) {
-    order = n;
-    degrees = new int[n];
-    weights = new T[n*n];
+  DenseDiGraph(int N) {
+    order = N;
+    degrees = new int[N] {};
+    weights = new T[N*N] {};
   }
 
   inline T weight(int i, int j) {

@@ -5,10 +5,6 @@
 
 using namespace std;
 
-#ifndef _THREADS
-#define _THREADS 64
-#endif
-
 
 
 
@@ -68,7 +64,7 @@ __global__ void sumKernel(T *a, T *x, int N) {
 template <class T>
 T sumCuda(T *x, int N) {
   int threads = _THREADS;
-  int blocks = max(ceilDiv(N, threads), 2);
+  int blocks = max(ceilDiv(N, threads), 1024);
   size_t X1 = N * sizeof(T);
   size_t A1 = blocks * sizeof(T);
   T *aPartial = (T*) malloc(A1);
@@ -84,4 +80,16 @@ T sumCuda(T *x, int N) {
   TRY( cudaFree(xD) );
   TRY( cudaFree(aPartialD) );
   return sum(aPartial, blocks);
+}
+
+
+template <class T, size_t N>
+T sumCuda(array<T, N>& x) {
+  return sumCuda(x.data(), x.size());
+}
+
+
+template <class T>
+T sumCuda(vector<T>& x) {
+  return sumCuda(x.data(), x.size());
 }

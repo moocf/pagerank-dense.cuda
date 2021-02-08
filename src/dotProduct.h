@@ -2,17 +2,11 @@
 #include <array>
 #include <vector>
 #include <algorithm>
-#include <stdlib.h>
 #include "_support.h"
 #include "ceilDiv.h"
 #include "sum.h"
 
 using namespace std;
-
-// Constants
-#ifndef _THREADS
-#define _THREADS 64
-#endif
 
 
 
@@ -64,7 +58,7 @@ __global__ void dotProductKernel(T *a, T *x, T *y, int N) {
 template <class T>
 T dotProductCuda(T *x, T *y, int N) {
   int threads = _THREADS;
-  int blocks = max(ceilDiv(N, threads), 2);
+  int blocks = max(ceilDiv(N, threads), 1024);
   size_t X1 = N * sizeof(T);
   size_t A1 = blocks * sizeof(T);
   T *aPartial = (T*) malloc(A1);

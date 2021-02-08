@@ -1,6 +1,10 @@
 #pragma once
-#include "_support.h"
+#include <array>
+#include <vector>
 #include <stdio.h>
+#include "_support.h"
+
+
 
 
 // Prints 1D array.
@@ -12,6 +16,20 @@ void print(T *x, int N) {
   if (N>0) printf("%.4f", x[N-1]);
   printf("}\n");
 }
+
+
+template <class T, size_t N>
+void print(array<T, N>& x) {
+  print(x.data(), x.size());
+}
+
+
+template <class T>
+void print(vector<T>& x) {
+  print(x.data(), x.size());
+}
+
+
 
 
 // Prints 2D array.

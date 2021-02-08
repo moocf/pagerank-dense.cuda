@@ -23,10 +23,10 @@ DenseDiGraph<float> readMtx(string pth) {
 
   // read remaining lines (edges)
   while (getline(f, ln)) {
-      int i, j; float w;
-      ls = istringstream(ln);
-      if (!(ls >> i >> j >> w)) break;
-      a.addLink(i-1, j-1, w);
+    int i, j; float w;
+    ls = istringstream(ln);
+    if (!(ls >> i >> j >> w)) break;
+    a.addLink(i-1, j-1, w);
   }
   return a;
 }

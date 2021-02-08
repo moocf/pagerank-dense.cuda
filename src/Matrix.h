@@ -8,7 +8,7 @@ class Matrix {
   int cols;
 
   Matrix(int r, int c) {
-    data = new T[r*c];
+    data = new T[r*c] {};
     rows = r;
     cols = c;
   }

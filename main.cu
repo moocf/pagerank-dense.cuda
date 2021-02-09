@@ -97,11 +97,12 @@ int main(int argc, char **argv) {
   int N = g.order;
   float *ranks = new float[N];
   normalizeDegree(g);
-  pageRank(ranks, g);
-  printf("pageRank     = "); print(ranks, N);
-  pageRankOmp(ranks, g);
-  printf("pageRankOmp  = "); print(ranks, N);
-  pageRankCuda(ranks, g);
-  printf("pageRankCuda = "); print(ranks, N);
+  float t;
+  t = measureDuration([&ranks, &g]() { pageRank(ranks, g); });
+  printf("[%5.1f ms] pageRank     = ", t); print(ranks, N);
+  t = measureDuration([&ranks, &g]() { pageRankOmp(ranks, g); });
+  printf("[%5.1f ms] pageRankOmp  = ", t); print(ranks, N);
+  t = measureDuration([&ranks, &g]() { pageRankCuda(ranks, g); });
+  printf("[%5.1f ms] pageRankCuda = ", t); print(ranks, N);
   return 0;
 }

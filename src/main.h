@@ -6,6 +6,7 @@
 #include "errorAbs.h"
 #include "fill.h"
 #include "matrixMultiply.h"
+#include "measureDuration.h"
 #include "normalizeDegree.h"
 #include "pageRank.h"
 #include "print.h"

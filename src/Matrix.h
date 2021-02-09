@@ -14,4 +14,8 @@ class Matrix {
     rows = r;
     cols = c;
   }
+
+  ~Matrix() {
+    delete[] data;
+  }
 };

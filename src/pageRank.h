@@ -30,7 +30,7 @@ struct pageRankOptions {
 // Finds rank of nodes in graph.
 template <class T>
 void pageRank(T *a, T *w, int N, T p, T E) {
-  T *r = new T[N], *a0 = a;
+  T *r = new T[N], *a0 = a, *r0 = r;
   fill(r, N, T(1.0/N));
   while (1) {
     int e = 0;
@@ -44,6 +44,7 @@ void pageRank(T *a, T *w, int N, T p, T E) {
     if (!e) break;
   }
   if (r != a0) memcpy(a0, r, N*sizeof(T));
+  delete[] r0;
 }
 
 
@@ -64,7 +65,7 @@ void pageRank(T *a, DenseDiGraph<T>& x, pageRankOptions<T> o=pageRankOptions<T>(
 // Finds rank of nodes in graph.
 template <class T>
 void pageRankOmp(T *a, T *w, int N, T p, T E) {
-  T *r = new T[N], *a0 = a;
+  T *r = new T[N], *a0 = a, *r0 = r;
   fill(r, N, T(1.0/N));
   while (1) {
     int e = 0;
@@ -82,6 +83,7 @@ void pageRankOmp(T *a, T *w, int N, T p, T E) {
     if (!e) break;
   }
   if (r != a0) memcpy(a0, r, N*sizeof(T));
+  delete[] r0;
 }
 
 

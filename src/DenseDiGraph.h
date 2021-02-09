@@ -20,6 +20,12 @@ class DenseDiGraph {
     weights = new T[N*N] {};
   }
 
+  ~DenseDiGraph() {
+    delete[] degrees;
+    delete[] weights;
+  }
+
+
   inline T weight(int i, int j) {
     int N = order;
     return weights[N*j + i];

@@ -91,18 +91,92 @@ const char* testAll() {
 
 
 
-int main(int argc, char **argv) {
-  testAll();
-  auto g = readMtx(argv[1]);
+void runFill() {
+  int N = 64*1024*1024;
+  float *x = new float[N], t;
+  t = measureDuration([&]() { fill(x, N, 1.0f); });
+  printf("[%07.1f ms] fill     = \n", t);
+  t = measureDuration([&]() { fillOmp(x, N, 1.0f); });
+  printf("[%07.1f ms] fillOmp  = \n", t);
+  t = measureDuration([&]() { fillCuda(x, N, 1.0f); });
+  printf("[%07.1f ms] fillCuda = \n", t);
+  delete[] x;
+}
+
+
+void runSum() {
+  int N = 64*1024*1024;
+  float *x = new float[N], t;
+  fill(x, N, 1.0f);
+  t = measureDuration([&]() { sum(x, N); });
+  printf("[%07.1f ms] sum     = \n", t);
+  t = measureDuration([&]() { sumOmp(x, N); });
+  printf("[%07.1f ms] sumOmp  = \n", t);
+  t = measureDuration([&]() { sumCuda(x, N); });
+  printf("[%07.1f ms] sumCuda = \n", t);
+  delete[] x;
+}
+
+
+void runErrorAbs() {
+  int N = 64*1024*1024;
+  float *x = new float[N];
+  float *y = new float[N], t;
+  fill(x, N, 1.0f);
+  fill(y, N, 2.0f);
+  t = measureDuration([&]() { errorAbs(x, y, N); });
+  printf("[%07.1f ms] errorAbs     = \n", t);
+  t = measureDuration([&]() { errorAbsOmp(x, y, N); });
+  printf("[%07.1f ms] errorAbsOmp  = \n", t);
+  t = measureDuration([&]() { errorAbsCuda(x, y, N); });
+  printf("[%07.1f ms] errorAbsCuda = \n", t);
+  delete[] x;
+  delete[] y;
+}
+
+
+void runDotProduct() {
+  int N = 64*1024*1024;
+  float *x = new float[N];
+  float *y = new float[N], t;
+  fill(x, N, 1.0f);
+  fill(y, N, 1.0f);
+  t = measureDuration([&]() { dotProduct(x, y, N); });
+  printf("[%07.1f ms] dotProduct     = \n", t);
+  t = measureDuration([&]() { dotProductOmp(x, y, N); });
+  printf("[%07.1f ms] dotProductOmp  = \n", t);
+  t = measureDuration([&]() { dotProductCuda(x, y, N); });
+  printf("[%07.1f ms] dotProductCuda = \n", t);
+  delete[] x;
+  delete[] y;
+}
+
+
+template <class T>
+void runPageRank(DenseDiGraph<T>& g) {
   int N = g.order;
-  float *ranks = new float[N];
+  float *ranks = new float[N], t;
   normalizeDegree(g);
-  float t;
-  t = measureDuration([&ranks, &g]() { pageRank(ranks, g); });
-  printf("[%5.1f ms] pageRank     = ", t); print(ranks, N);
-  t = measureDuration([&ranks, &g]() { pageRankOmp(ranks, g); });
-  printf("[%5.1f ms] pageRankOmp  = ", t); print(ranks, N);
-  t = measureDuration([&ranks, &g]() { pageRankCuda(ranks, g); });
-  printf("[%5.1f ms] pageRankCuda = ", t); print(ranks, N);
+  t = measureDuration([&]() { pageRank(ranks, g); });
+  printf("[%07.1f ms] pageRank     = \n", t); // print(ranks, N);
+  t = measureDuration([&]() { pageRankOmp(ranks, g); });
+  printf("[%07.1f ms] pageRankOmp  = \n", t); // print(ranks, N);
+  t = measureDuration([&]() { pageRankCuda(ranks, g); });
+  printf("[%07.1f ms] pageRankCuda = \n", t); // print(ranks, N);
+  delete[] ranks;
+}
+
+
+
+
+int main(int argc, char **argv) {
+  printf("Loading graph ...\n");
+  auto g = readMtx(argv[1]);
+  testAll();
+  runFill();
+  runSum();
+  runErrorAbs();
+  runDotProduct();
+  runPageRank(g);
   return 0;
 }

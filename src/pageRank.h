@@ -4,9 +4,10 @@
 #include <string.h>
 #include <omp.h>
 #include "_cuda.h"
-#include "fill.h"
 #include "DenseDiGraph.h"
 #include "dotProduct.h"
+#include "errorAbs.h"
+#include "fill.h"
 
 using namespace std;
 
@@ -29,34 +30,32 @@ struct pageRankOptions {
 
 // Finds rank of nodes in graph.
 template <class T>
-void pageRank(T *a, T *w, int N, T p, T E) {
-  T *r = new T[N], *a0 = a, *r0 = r;
-  fill(r, N, T(1.0/N));
+auto pageRank(T *w, int N, T p, T E) {
+  vector<T> r(N);
+  vector<T> a(N);
+  fill(r, T(1)/N);
   while (1) {
-    int e = 0;
     for (int j=0; j<N; j++) {
-      T wjr = dotProduct(&w[N*j], r, N);
+      T wjr = dotProduct(&w[N*j], r.data(), N);
       a[j] = p*wjr + (1-p)/N;
-      T ej = abs(r[j] - a[j]);
-      if (ej >= E) e++;
     }
+    T e = errorAbs(a, r);
+    if (e < E) break;
     swap(a, r);
-    if (!e) break;
   }
-  if (r != a0) memcpy(a0, r, N*sizeof(T));
-  delete[] r0;
+  return a;
 }
 
 
 template <class T>
-void pageRank(T *a, T *w, int N, pageRankOptions<T> o=pageRankOptions<T>()) {
-  pageRank(a, w, N, o.damping, o.convergence);
+auto pageRank(T *w, int N, pageRankOptions<T> o=pageRankOptions<T>()) {
+  return pageRank(w, N, o.damping, o.convergence);
 }
 
 
 template <class T>
-void pageRank(T *a, DenseDiGraph<T>& x, pageRankOptions<T> o=pageRankOptions<T>()) {
-  pageRank(a, x.weights, x.order, o);
+auto pageRank(DenseDiGraph<T>& x, pageRankOptions<T> o=pageRankOptions<T>()) {
+  return pageRank(x.weights, x.order, o);
 }
 
 

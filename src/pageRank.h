@@ -5,15 +5,18 @@
 #include <omp.h>
 #include "_cuda.h"
 #include "DenseDiGraph.h"
+#include "measureDuration.h"
 #include "dotProduct.h"
 #include "errorAbs.h"
 #include "fill.h"
+#include "sum.h"
 
 using namespace std;
 
 
 
 
+// Finds rank of nodes in graph.
 template <class T>
 struct pageRankOptions {
   T damping;
@@ -28,11 +31,9 @@ struct pageRankOptions {
 
 
 
-// Finds rank of nodes in graph.
 template <class T>
-auto pageRank(T *w, int N, T p, T E) {
-  vector<T> r(N);
-  vector<T> a(N);
+auto& pageRankCore(vector<T>& a, vector<T>& r, T *w, int N, T p, T E) {
+  T e0 = T();
   fill(r, T(1)/N);
   while (1) {
     for (int j=0; j<N; j++) {
@@ -40,68 +41,37 @@ auto pageRank(T *w, int N, T p, T E) {
       a[j] = p*wjr + (1-p)/N;
     }
     T e = errorAbs(a, r);
-    if (e < E) break;
+    if (e < E || e == e0) break;
     swap(a, r);
+    e0 = e;
   }
   return a;
 }
 
 
 template <class T>
-auto pageRank(T *w, int N, pageRankOptions<T> o=pageRankOptions<T>()) {
-  return pageRank(w, N, o.damping, o.convergence);
+auto pageRank(float& t, T *w, int N, T p, T E) {
+  vector<T> r(N);
+  vector<T> a(N);
+  t = measureDuration([&]() { pageRankCore(a, r, w, N, p, E); });
+  return a;
 }
 
-
 template <class T>
-auto pageRank(DenseDiGraph<T>& x, pageRankOptions<T> o=pageRankOptions<T>()) {
-  return pageRank(x.weights, x.order, o);
+auto pageRank(float& t, T *w, int N, pageRankOptions<T> o=pageRankOptions<T>()) {
+  return pageRank(t, w, N, o.damping, o.convergence);
 }
 
-
-
-
-// Finds rank of nodes in graph.
 template <class T>
-void pageRankOmp(T *a, T *w, int N, T p, T E) {
-  T *r = new T[N], *a0 = a, *r0 = r;
-  fill(r, N, T(1.0/N));
-  while (1) {
-    int e = 0;
-    #pragma omp parallel for
-    for (int j=0; j<N; j++) {
-      T wjr = dotProduct(&w[N*j], r, N);
-      a[j] = p*wjr + (1-p)/N;
-      T ej = abs(r[j] - a[j]);
-      if (ej >= E) {
-        #pragma omp atomic
-        e++;
-      }
-    }
-    swap(a, r);
-    if (!e) break;
-  }
-  if (r != a0) memcpy(a0, r, N*sizeof(T));
-  delete[] r0;
-}
-
-
-template <class T>
-void pageRankOmp(T *a, T *w, int N, pageRankOptions<T> o=pageRankOptions<T>()) {
-  pageRankOmp(a, w, N, o.damping, o.convergence);
-}
-
-
-template <class T>
-void pageRankOmp(T *a, DenseDiGraph<T>& x, pageRankOptions<T> o=pageRankOptions<T>()) {
-  pageRankOmp(a, x.weights, x.order, o);
+auto pageRank(float& t, DenseDiGraph<T>& x, pageRankOptions<T> o=pageRankOptions<T>()) {
+  return pageRank(t, x.edgeData(), x.order(), o);
 }
 
 
 
 
 template <class T>
-__global__ void pageRankKernel(int *e, T *a, T *r, T *w, int N, T p, T E) {
+__global__ void pageRankKernel(T *a, T *r, T *w, int N, T p) {
   DEFINE(t, b, B, G);
   __shared__ T cache[_THREADS];
 
@@ -111,53 +81,63 @@ __global__ void pageRankKernel(int *e, T *a, T *r, T *w, int N, T p, T E) {
     if (t != 0) continue;
     T wjr = cache[0];
     a[j] = p*wjr + (1-p)/N;
-    T ej = abs(a[j] - r[j]);
-    if (ej >= E) atomicAdd(e, 1);
   }
 }
 
 
 template <class T>
-void pageRankCuda(T *a, T *w, int N, T p, T E) {
+T* pageRankCudaCore(T *e, T *a, T *r, T *w, int N, T p, T E) {
   int threads = _THREADS;
-  int blocks = max(ceilDiv(N, threads), 1024);
-  size_t W1 = N*N * sizeof(T);
-  size_t A1 = N * sizeof(T);
-  size_t E1 = 1 * sizeof(int);
-  int e = 0;
+  int blocks = min(ceilDiv(N, threads), _BLOCKS);
+  int E1 = blocks * sizeof(T);
+  T eH[_BLOCKS], e0 = T();
+  fillKernel<<<blocks, threads>>>(r, N, T(1)/N);
+  while (1) {
+    pageRankKernel<<<blocks, threads>>>(a, r, w, N, p);
+    errorAbsKernel<<<blocks, threads>>>(e, a, r, N);
+    TRY( cudaMemcpy(eH, e, E1, cudaMemcpyDeviceToHost) );
+    T f = sum(eH, blocks);
+    if (f < E || f == e0) break;
+    swap(a, r);
+    e0 = f;
+  }
+  return a;
+}
 
-  int *eD;
-  T *wD, *rD, *aD;
+template <class T>
+auto pageRankCuda(float& t, T *w, int N, T p, T E) {
+  int threads = _THREADS;
+  int blocks = min(ceilDiv(N, threads), 1024);
+  size_t E1 = blocks * sizeof(T);
+  size_t A1 = N * sizeof(T);
+  size_t W1 = N*N * sizeof(T);
+  vector<T> a(N);
+
+  T *eD, *aD, *bD, *rD, *wD;
   TRY( cudaMalloc(&wD, W1) );
-  TRY( cudaMalloc(&rD, A1) );
   TRY( cudaMalloc(&aD, A1) );
+  TRY( cudaMalloc(&rD, A1) );
   TRY( cudaMalloc(&eD, E1) );
   TRY( cudaMemcpy(wD, w, W1, cudaMemcpyHostToDevice) );
 
-  fillKernel<<<blocks, threads>>>(rD, N, T(1.0/N));
-  while (1) {
-    fillKernel<<<1, 1>>>(eD, 1, 0);
-    pageRankKernel<<<blocks, threads>>>(eD, aD, rD, wD, N, p, E);
-    TRY( cudaMemcpy(&e, eD, E1, cudaMemcpyDeviceToHost) );
-    swap(aD, rD);
-    if (!e) break;
-  }
-  TRY( cudaMemcpy(a, rD, A1, cudaMemcpyDeviceToHost) );
+  t = measureDuration([&]() { bD = pageRankCudaCore(eD, aD, rD, wD, N, p, E); });
+  TRY( cudaMemcpy(a.data(), bD, A1, cudaMemcpyDeviceToHost) );
 
-  TRY( cudaFree(wD) );
-  TRY( cudaFree(rD) );
-  TRY( cudaFree(aD) );
   TRY( cudaFree(eD) );
+  TRY( cudaFree(aD) );
+  TRY( cudaFree(rD) );
+  TRY( cudaFree(wD) );
+  return a;
 }
 
 
 template <class T>
-void pageRankCuda(T *a, T *w, int N, pageRankOptions<T> o=pageRankOptions<T>()) {
-  pageRankCuda(a, w, N, o.damping, o.convergence);
+auto pageRankCuda(float& t, T *w, int N, pageRankOptions<T> o=pageRankOptions<T>()) {
+  return pageRankCuda(t, w, N, o.damping, o.convergence);
 }
 
 
 template <class T>
-void pageRankCuda(T *a, DenseDiGraph<T>& x, pageRankOptions<T> o=pageRankOptions<T>()) {
-  pageRankCuda(a, x.weights, x.order, o);
+auto pageRankCuda(float& t, DenseDiGraph<T>& x, pageRankOptions<T> o=pageRankOptions<T>()) {
+  return pageRankCuda(t, x.edgeData(), x.order(), o);
 }

@@ -1,14 +1,13 @@
 #pragma once
-#include "DenseDiGraph.h"
 
 
 
 
 // Finds out-degree of a node.
-template <class T>
-int degree(DenseDiGraph<T> x, int i) {
-  int N = x.order, a = 0;
-  for (int j=0; j<N; j++)
-    if (x.weight(i, j) != 0) a++;
+template <class G>
+int degree(G& x, int u) {
+  int N = x.order(), a = 0;
+  for (int v=0; v<N; v++)
+    if (x.edgeData(u, v) != 0) a++;
   return a;
 }

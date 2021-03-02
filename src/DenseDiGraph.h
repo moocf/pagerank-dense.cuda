@@ -9,36 +9,47 @@ using namespace std;
 // Defines an adjacency matrix (R:dst, C:src) based graph.
 template <class T>
 class DenseDiGraph {
-  public:
-  int order;
-  int* degrees;
-  T*   weights;
+  int *odeg;
+  T   *ewt;
+  int n;
 
-  DenseDiGraph(int N) {
-    order = N;
-    degrees = new int[N] {};
-    weights = new T[N*N] {};
+  // Types
+  public:
+  using TKey    = int;
+  using TVertex = void;
+  using TEdge   = T;
+
+  // Read operations
+  public:
+  int order() { return n; }
+  int size()  { return n*n; }
+
+  int* degrees() { return odeg; }
+  T* edgeData()  { return ewt; }
+
+  int degree(int u) { return odeg[u]; }
+  T edgeData(int u, int v) { return ewt[n*v + u]; }
+  void setEdgeData(int u, int v, T d) { ewt[n*v + u] = d; }
+
+  // Write operations
+  public:
+  void addEdge(int u, int v, T d=1) {
+    odeg[u] += d              != 0? 1 : 0;
+    odeg[u] -= edgeData(u, v) != 0? 1 : 0;
+    setEdgeData(u, v, d);
+  }
+  void removeEdge(int u, int v) { addEdge(u, v, 0); }
+
+  // Lifetime operations
+  public:
+  DenseDiGraph(int _n) {
+    n = _n;
+    odeg = new int[n] {};
+    ewt  = new T[n*n] {};
   }
 
   ~DenseDiGraph() {
-    delete[] degrees;
-    delete[] weights;
-  }
-
-
-  inline T weight(int i, int j) {
-    int N = order;
-    return weights[N*j + i];
-  }
-
-  inline void setWeight(int i, int j, T v) {
-    int N = order;
-    weights[N*j + i] = v;
-  }
-
-  inline void addLink(int i, int j, T w=1) {
-    degrees[i] += w            != 0? 1 : 0;
-    degrees[i] -= weight(i, j) != 0? 1 : 0;
-    setWeight(i, j, w);
+    delete[] odeg;
+    delete[] ewt;
   }
 };

@@ -4,31 +4,29 @@
 #include <string>
 #include "DenseDiGraph.h"
 
-using namespace std;
+using std::string;
+using std::ifstream;
+using std::istringstream;
+using std::getline;
 
 
 
 
-DenseDiGraph<float> readMtx(string pth) {
-  string ln;
-  ifstream f(pth);
-
-  // skip 1st line
-  getline(f, ln);
-
-  // read 2nd line
+auto readMtx(string pth) {
   int r, c, sz;
+  ifstream f(pth);
+  string ln;
+
+  getline(f, ln);
   getline(f, ln);
   istringstream ls(ln);
   ls >> r >> c >> sz;
   DenseDiGraph<float> a(r);
-
-  // read remaining lines (edges)
   while (getline(f, ln)) {
     int i, j; float w;
     ls = istringstream(ln);
     if (!(ls >> i >> j >> w)) break;
-    a.addLink(i-1, j-1, w);
+    if (w > 0) a.addEdge(i-1, j-1, w);
   }
   return a;
 }

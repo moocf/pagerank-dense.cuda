@@ -10,6 +10,10 @@
 #define _THREADS 64
 #endif
 
+#ifndef _BLOCKS
+#define _BLOCKS 1024
+#endif
+
 
 
 
